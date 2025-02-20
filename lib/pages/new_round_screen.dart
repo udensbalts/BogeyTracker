@@ -30,7 +30,10 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
         return {
           'id': doc.id,
           'name': doc['name'],
-          'baskets': List<Map<String, dynamic>>.from(doc['baskets'] ?? []),
+          'baskets': (doc['baskets'] as List<dynamic>?)
+                  ?.map((b) => Map<String, dynamic>.from(b as Map))
+                  .toList() ??
+              [],
         };
       }).toList();
     });
@@ -63,16 +66,36 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
   }
 
   Future<void> startRound() async {
-    if (selectedCourseId == null || selectedPlayers.isEmpty) return;
+    if (selectedCourseId == null) {
+      return;
+    }
 
-    var selectedCourse = courses.firstWhere((c) => c['id'] == selectedCourseId);
-    List<BasketScore> basketScores = selectedCourse['baskets']
-        .map<BasketScore>((basket) => BasketScore(
-              basketNumber: basket['basketNumber'] ?? 0,
-              par: basket['par'] ?? 3,
-              distance: basket['distance'] ?? 0,
-            ))
-        .toList();
+    if (selectedPlayers.isEmpty) {
+      return;
+    }
+
+    var selectedCourse = courses.firstWhere((c) => c['id'] == selectedCourseId,
+        orElse: () => {});
+
+    if (selectedCourse.isEmpty) {
+      return;
+    }
+
+    // Ensure baskets exist and are properly formatted
+    if (selectedCourse['baskets'] == null ||
+        selectedCourse['baskets'] is! List) {
+      return;
+    }
+
+    List<BasketScore> basketScores =
+        (selectedCourse['baskets'] as List<dynamic>).map((basket) {
+      var basketMap = basket as Map<String, dynamic>? ?? {};
+      return BasketScore(
+        basketNumber: (basketMap['basketNumber'] as num?)?.toInt() ?? 0,
+        par: (basketMap['par'] as num?)?.toInt() ?? 3,
+        distance: (basketMap['distance'] as num?)?.toInt() ?? 0,
+      );
+    }).toList();
 
     for (var player in selectedPlayers) {
       player.basketScores = List.from(basketScores); // Ensure separate copies
@@ -83,23 +106,37 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
       selectedPlayers.map((p) => p.playerId).toList(),
     );
 
-    if (roundId != null) {
-      // ✅ Navigate to ScoringScreen and pass roundId + selectedPlayers
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ScoringScreen(
-            roundId: roundId,
-            courseId: '',
-            players: [],
-          ),
-        ),
-      );
-    } else {
+    if (roundId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to create round")),
       );
+      return;
     }
+
+    // Pass data to the next screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ScoringScreen(
+          roundId: roundId,
+          courseId: selectedCourseId!,
+          players: selectedPlayers
+              .map((p) => {
+                    'playerId': p.playerId,
+                    'playerName': p.playerName ?? "",
+                  })
+              .toList(),
+          baskets: selectedCourse['baskets']
+                  ?.map<Map<String, dynamic>>((b) => {
+                        'basketNumber': b['basketNumber'],
+                        'par': b['par'],
+                        'distance': b['distance'],
+                      })
+                  .toList() ??
+              [], // Ensure baskets are passed correctly
+        ),
+      ),
+    );
   }
 
   @override
@@ -121,6 +158,7 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
                 );
               }).toList(),
               onChanged: (String? newValue) {
+                if (newValue == null) return;
                 setState(() {
                   selectedCourseId = newValue;
                   selectedCourseName =
@@ -150,7 +188,9 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: startRound,
+              onPressed: () {
+                startRound();
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple,
                 padding: EdgeInsets.symmetric(vertical: 12),

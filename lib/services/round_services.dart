@@ -19,9 +19,9 @@ class RoundService {
       // Convert basket data into BasketScore objects
       List<BasketScore> basketScores = baskets.map((basket) {
         return BasketScore(
-          basketNumber: basket['basketNumber'] ?? 0,
-          par: basket['par'] ?? 3,
-          distance: basket['distance'] ?? 0,
+          basketNumber: (basket['basketNumber'] as num?)?.toInt() ?? 0,
+          par: (basket['par'] as num?)?.toInt() ?? 3,
+          distance: (basket['distance'] as num?)?.toInt() ?? 0,
         );
       }).toList();
 
