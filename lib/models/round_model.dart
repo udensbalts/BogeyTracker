@@ -93,7 +93,7 @@ class BasketScore {
     return BasketScore(
       basketNumber: map['basketNumber'],
       par: map['par'],
-      distance: map['distance'],
+      distance: (map['distance'] as num?)?.toInt() ?? 0,
       score: map['score'],
     );
   }
