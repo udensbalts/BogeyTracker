@@ -57,6 +57,14 @@ class _UserProfileState extends State<UserProfile> {
     }
   }
 
+  void _logout() async {
+    await _auth.signOut();
+    if (mounted) {
+      Navigator.pushReplacementNamed(
+          context, '/login'); // Redirect to login page
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,6 +100,12 @@ class _UserProfileState extends State<UserProfile> {
                     ],
                   ),
                 ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _logout,
+        backgroundColor: Colors.red,
+        child: Icon(Icons.logout),
+        tooltip: "Log Out",
+      ),
     );
   }
 }

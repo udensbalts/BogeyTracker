@@ -142,13 +142,21 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF2B2E4A),
       appBar: AppBar(title: Text("New Round")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Select Course", style: TextStyle(fontSize: 18)),
+            Text(
+              "Select Course",
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
             DropdownButton<String>(
               value: selectedCourseId,
               items: courses.map<DropdownMenuItem<String>>((course) {
@@ -167,14 +175,28 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
               },
             ),
             SizedBox(height: 20),
-            Text("Select Players", style: TextStyle(fontSize: 18)),
+            Text(
+              "Select Players",
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              selectionColor: Colors.white,
+            ),
             Expanded(
               child: ListView(
                 children: users.map((user) {
                   bool isSelected =
                       selectedPlayers.any((p) => p.playerId == user['id']);
                   return ListTile(
-                    title: Text(user['name']),
+                    title: Text(
+                      user['name'],
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                      ),
+                    ),
                     trailing: Icon(
                       isSelected
                           ? Icons.check_box
@@ -192,13 +214,15 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
                 startRound();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
+                backgroundColor: Color(0xFF53354A),
                 padding: EdgeInsets.symmetric(vertical: 12),
               ),
               child: Center(
                 child: Text(
                   "Start Round",
-                  style: TextStyle(color: Colors.white, fontSize: 18),
+                  style: TextStyle(
+                      color: const Color.fromARGB(255, 255, 255, 255),
+                      fontSize: 18),
                 ),
               ),
             ),

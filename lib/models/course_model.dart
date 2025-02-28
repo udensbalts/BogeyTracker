@@ -6,23 +6,28 @@ class Course {
   final int totalBaskets;
   final List<Basket> baskets;
 
-  Course(
-      {required this.id,
-      required this.name,
-      required this.totalBaskets,
-      required this.baskets});
+  Course({
+    required this.id,
+    required this.name,
+    required this.totalBaskets,
+    required this.baskets,
+  });
 
   // Convert Firestore document to Course object
   factory Course.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
     List<Basket> basketsList =
-        (data['baskets'] as List).map((item) => Basket.fromMap(item)).toList();
+        (data['baskets'] as List).asMap().entries.map((entry) {
+      int index = entry.key; // Get the index as basketNumber
+      Map<String, dynamic> item = entry.value;
+      return Basket.fromMap(item, index);
+    }).toList();
 
     return Course(
-      id: doc.id, // Assign Firestore document ID
+      id: doc.id,
       name: data['name'],
-      totalBaskets: data['totalBaskets'],
+      totalBaskets: data['totalBaskets'] ?? basketsList.length,
       baskets: basketsList,
     );
   }
@@ -38,20 +43,27 @@ class Course {
 }
 
 class Basket {
+  final int basketNumber;
   final int par;
   final double distance;
 
-  Basket({required this.par, required this.distance});
+  Basket({
+    required this.basketNumber,
+    required this.par,
+    required this.distance,
+  });
 
-  factory Basket.fromMap(Map<String, dynamic> data) {
+  factory Basket.fromMap(Map<String, dynamic> data, int index) {
     return Basket(
-      par: data['par'],
-      distance: data['distance'].toDouble(),
+      basketNumber: index,
+      par: data['par'] ?? 3,
+      distance: (data['distance'] as num).toDouble(),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
+      'basketNumber': basketNumber,
       'par': par,
       'distance': distance,
     };

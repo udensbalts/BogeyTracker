@@ -7,6 +7,7 @@ import 'package:test_app/pages/laukumi.dart';
 import 'package:test_app/pages/login.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:test_app/pages/new_round_screen.dart';
+import 'package:test_app/pages/user_rounds_screen.dart';
 import 'package:test_app/pages/userprofile.dart';
 
 class Wrapper extends StatefulWidget {
@@ -23,7 +24,7 @@ class _MyWidgetState extends State<Wrapper> {
   final List<Widget> _widgetOptions = <Widget>[
     NewRoundScreen(),
     CourseListScreen(),
-    CreateCourseScreen(),
+    UserRoundsScreen(),
     UserProfile(),
   ];
 

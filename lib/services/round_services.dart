@@ -30,8 +30,14 @@ class RoundService {
         return PlayerScore(
           playerId: playerId,
           playerName: "", // Fetch player name separately if needed
-          basketScores:
-              List.from(basketScores), // Copy basket scores for each player
+          basketScores: basketScores
+              .map((basket) => BasketScore(
+                    basketNumber: basket.basketNumber,
+                    par: basket.par,
+                    distance: basket.distance,
+                    score: 0, // Ensure each player starts with 0 score
+                  ))
+              .toList(),
         );
       }).toList();
 

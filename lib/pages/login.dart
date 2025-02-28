@@ -18,6 +18,9 @@ class _LoginState extends State<Login> {
   signIn() async {
     await FirebaseAuth.instance
         .signInWithEmailAndPassword(email: email.text, password: password.text);
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/home');
+    }
   }
 
   @override

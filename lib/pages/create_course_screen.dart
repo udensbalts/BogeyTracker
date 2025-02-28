@@ -39,11 +39,12 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
     int totalBaskets = int.parse(basketCountController.text);
 
     // Convert the par and distance inputs into Basket objects
+    baskets.clear();
     for (int i = 0; i < totalBaskets; i++) {
       int par = int.parse(parControllers[i].text);
       double distance = double.parse(distanceControllers[i].text);
 
-      baskets.add(Basket(par: par, distance: distance));
+      baskets.add(Basket(basketNumber: i + 1, par: par, distance: distance));
     }
 
     Course course = Course(
