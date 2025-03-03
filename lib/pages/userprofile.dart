@@ -16,6 +16,7 @@ class _UserProfileState extends State<UserProfile> {
   late String name;
   late String username;
   late String email;
+  int totalRounds = 0;
 
   bool isLoading = true;
   String errorMessage = "";
@@ -42,6 +43,7 @@ class _UserProfileState extends State<UserProfile> {
             email = userDoc['email'];
             isLoading = false;
           });
+          _getTotalRounds(user.uid);
         }
       } else {
         setState(() {
@@ -52,6 +54,34 @@ class _UserProfileState extends State<UserProfile> {
     } catch (e) {
       setState(() {
         errorMessage = "Failed to load user data: $e";
+        isLoading = false;
+      });
+    }
+  }
+
+  //Fetch total rounds
+  Future<void> _getTotalRounds(String playerId) async {
+    try {
+      QuerySnapshot roundsSnapshot =
+          await _firestore.collection('rounds').get();
+
+      int count = 0;
+      for (var doc in roundsSnapshot.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+        List<dynamic> playerScores = data['playerScores'] ?? [];
+
+        bool playerFound =
+            playerScores.any((player) => player['playerId'] == playerId);
+        if (playerFound) count++;
+      }
+
+      setState(() {
+        totalRounds = count;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = "Failed to load rounds: $e";
         isLoading = false;
       });
     }
@@ -69,33 +99,84 @@ class _UserProfileState extends State<UserProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("User Profile"),
+        title: Text(
+          "User Profile",
+          style: TextStyle(
+            fontSize: 25,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.black,
       ),
+      backgroundColor: Colors.grey[900],
       body: isLoading
-          ? Center(child: CircularProgressIndicator()) // Show loading indicator
+          ? Center(child: CircularProgressIndicator())
           : errorMessage.isNotEmpty
-              ? Center(
-                  child: Text(
-                      errorMessage)) // Show error message if there's an issue
+              ? Center(child: Text(errorMessage))
               : Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Profile Picture
+                      CircleAvatar(
+                        radius: 75,
+                        backgroundColor: Colors.brown.shade800,
+                        child: const Text('AH'),
+                      ),
+                      SizedBox(height: 10),
+                      // Column with user info
                       Text(
                         "Name: $name",
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
                       ),
                       SizedBox(height: 10),
                       Text(
-                        "Username: $username",
-                        style: TextStyle(fontSize: 18),
+                        "@$username",
+                        style: TextStyle(fontSize: 18, color: Colors.red),
                       ),
-                      SizedBox(height: 10),
-                      Text(
-                        "Email: $email",
-                        style: TextStyle(fontSize: 18),
+                      SizedBox(height: 20), // Space before row
+
+                      // New Row with two children
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Column(
+                            children: [
+                              Text("$totalRounds",
+                                  style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red)),
+                              Text("Rounds",
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      color: const Color.fromARGB(
+                                          255, 255, 255, 255))),
+                            ],
+                          ),
+                          SizedBox(width: 40), // Space between items
+                          Column(
+                            children: [
+                              Text("153",
+                                  style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red)),
+                              Text("Throws",
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      color: const Color.fromARGB(
+                                          255, 255, 255, 255))),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
