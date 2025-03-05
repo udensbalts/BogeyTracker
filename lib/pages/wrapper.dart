@@ -4,7 +4,6 @@ import 'package:test_app/pages/course_list_screen.dart';
 import 'package:test_app/pages/login.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:test_app/pages/new_round_screen.dart';
-import 'package:test_app/pages/profile.dart';
 import 'package:test_app/pages/user_rounds_screen.dart';
 import 'package:test_app/pages/userprofile.dart';
 

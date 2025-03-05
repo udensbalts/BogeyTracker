@@ -17,6 +17,7 @@ class _UserProfileState extends State<UserProfile> {
   late String username;
   late String email;
   int totalRounds = 0;
+  int totalThrows = 0;
 
   bool isLoading = true;
   String errorMessage = "";
@@ -44,6 +45,7 @@ class _UserProfileState extends State<UserProfile> {
             isLoading = false;
           });
           _getTotalRounds(user.uid);
+          _getTotalThrows(user.uid);
         }
       } else {
         setState(() {
@@ -82,6 +84,40 @@ class _UserProfileState extends State<UserProfile> {
     } catch (e) {
       setState(() {
         errorMessage = "Failed to load rounds: $e";
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _getTotalThrows(String playerId) async {
+    // Fetch total throws
+    try {
+      QuerySnapshot throwsSnapshot =
+          await _firestore.collection('rounds').get();
+      int totalCount = 0;
+      for (var doc in throwsSnapshot.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+        List<dynamic> playerScores = data['playerScores'] ?? [];
+
+        //Find players scores
+        for (var player in playerScores) {
+          if (player['playerId'] == playerId) {
+            List<dynamic> basketScores = player['basketScores'] ?? [];
+
+            //Sum all scores
+            for (var basket in basketScores) {
+              totalCount += (basket['score'] ?? 0) as int;
+            }
+          }
+        }
+      }
+      setState(() {
+        totalThrows = totalCount;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = "Failed to load throws: $e";
         isLoading = false;
       });
     }
@@ -164,7 +200,7 @@ class _UserProfileState extends State<UserProfile> {
                           SizedBox(width: 40), // Space between items
                           Column(
                             children: [
-                              Text("153",
+                              Text("$totalThrows",
                                   style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,
