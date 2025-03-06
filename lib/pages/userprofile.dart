@@ -18,6 +18,7 @@ class _UserProfileState extends State<UserProfile> {
   late String email;
   int totalRounds = 0;
   int totalThrows = 0;
+  List bestRounds = [];
 
   bool isLoading = true;
   String errorMessage = "";
@@ -46,6 +47,7 @@ class _UserProfileState extends State<UserProfile> {
           });
           _getTotalRounds(user.uid);
           _getTotalThrows(user.uid);
+          _getBestRounds(user.uid);
         }
       } else {
         setState(() {
@@ -118,6 +120,52 @@ class _UserProfileState extends State<UserProfile> {
     } catch (e) {
       setState(() {
         errorMessage = "Failed to load throws: $e";
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _getBestRounds(String playerId) async {
+    try {
+      QuerySnapshot roundsSnapshot =
+          await _firestore.collection('rounds').get();
+
+      Map<String, Map<String, dynamic>> bestRoundsByCourse = {};
+
+      for (var doc in roundsSnapshot.docs) {
+        var data = doc.data() as Map<String, dynamic>;
+        String courseId = data['courseId'];
+        String courseName = data['courseName'];
+        List<dynamic> playerScores = data['playerScores'] ?? [];
+
+        for (var player in playerScores) {
+          if (player['playerId'] == playerId) {
+            List<dynamic> basketScores = player['basketScores'] ?? [];
+
+            int totalScore = basketScores.fold(
+                0, (sum, basket) => sum + (basket['score'] ?? 0) as int);
+
+            // If the course is not in the map or this round has a lower score, update it
+            if (!bestRoundsByCourse.containsKey(courseId) ||
+                totalScore < bestRoundsByCourse[courseId]!['totalScore']) {
+              bestRoundsByCourse[courseId] = {
+                'courseId': courseId,
+                'courseName': courseName,
+                'totalScore': totalScore
+              };
+            }
+          }
+        }
+      }
+
+      // Convert map to list for displaying in UI
+      setState(() {
+        bestRounds = bestRoundsByCourse.values.toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = "Failed to load best rounds: $e";
         isLoading = false;
       });
     }
@@ -214,6 +262,54 @@ class _UserProfileState extends State<UserProfile> {
                           ),
                         ],
                       ),
+                      SizedBox(height: 20),
+
+                      // Best Rounds Section
+                      Text(
+                        "Best Rounds",
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                      SizedBox(height: 10),
+
+                      // List of Best Rounds
+                      bestRounds.isEmpty
+                          ? Text(
+                              "No best rounds available",
+                              style: TextStyle(
+                                  color: Colors.white70, fontSize: 16),
+                            )
+                          : SizedBox(
+                              height: 250,
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: bestRounds.length,
+                                itemBuilder: (context, index) {
+                                  final round = bestRounds[index];
+                                  return Card(
+                                    color: Colors.grey[850],
+                                    margin: EdgeInsets.symmetric(
+                                        vertical: 5, horizontal: 10),
+                                    child: ListTile(
+                                      title: Text(
+                                        round['courseName'],
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      subtitle: Text(
+                                        "Score: ${round['totalScore']}",
+                                        style: TextStyle(color: Colors.white70),
+                                      ),
+                                      leading: Icon(Icons.sports_golf,
+                                          color: Colors.red),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
                     ],
                   ),
                 ),

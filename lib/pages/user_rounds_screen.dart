@@ -20,8 +20,18 @@ class _UserRoundsScreenState extends State<UserRoundsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("My Rounds"),
+        title: Text(
+          "My Rounds",
+          style: TextStyle(
+            fontSize: 25,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.black,
       ),
+      backgroundColor: Colors.grey[900],
       body: user == null
           ? Center(child: Text("User not logged in"))
           : StreamBuilder<QuerySnapshot>(
@@ -63,21 +73,40 @@ class _UserRoundsScreenState extends State<UserRoundsScreen> {
                     String courseName = roundData['courseName'];
                     String date = roundData['date'];
 
-                    return Card(
+                    return Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                            color: Colors.red, width: 2), // Red border
+                        borderRadius: BorderRadius.circular(8),
+                        // Optional: Rounded corners
+                      ),
                       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      child: ListTile(
-                        title: Text(courseName,
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text("Date: $date"),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => RoundDetailsScreen(
-                                  roundId: userRounds[index].id),
-                            ),
-                          );
-                        },
+                      child: Card(
+                        color: Colors.black, // Background color inside the card
+                        elevation: 5, // Remove default shadow
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(8), // Match border radius
+                        ),
+                        child: ListTile(
+                          title: Text(courseName,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red)),
+                          subtitle: Text(
+                            "Date: $date",
+                            style: TextStyle(color: Colors.red),
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RoundDetailsScreen(
+                                    roundId: userRounds[index].id),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     );
                   },
