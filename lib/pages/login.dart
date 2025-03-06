@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:test_app/pages/forgot.dart';
 import 'package:test_app/pages/signup.dart';
-import 'package:get/get.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -14,94 +14,177 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
+  bool isPasswordVisible = false;
+  bool isLoading = false;
 
-  signIn() async {
-    await FirebaseAuth.instance
-        .signInWithEmailAndPassword(email: email.text, password: password.text);
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, '/home');
+  Future<void> signIn() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email.text.trim(),
+        password: password.text.trim(),
+      );
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = "Login failed. Please try again.";
+      if (e.code == 'user-not-found') {
+        errorMessage = "No user found with this email.";
+      } else if (e.code == 'wrong-password') {
+        errorMessage = "Incorrect password. Try again.";
+      }
+
+      Get.snackbar(
+        "Login Error",
+        errorMessage,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+        margin: EdgeInsets.all(16),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(0xFF53354A),
-        title: Text(
-          "Login",
-          style: TextStyle(
-            color: const Color(0xFFFFFFFF),
-            fontSize: 30.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      backgroundColor: Color(0xFF2B2E4A),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            TextField(
-              style: TextStyle(
-                color: const Color(0xFFFFFFFF),
-                fontSize: 16.0,
-                fontWeight: FontWeight.bold,
-              ),
-              controller: email,
-              decoration: InputDecoration(
-                hintText: "Ievadi epastu",
-                prefixIcon: Icon(
-                  Icons.email_rounded,
-                  color: Color(0xFFFFFFFF),
+      backgroundColor: Colors.grey[900],
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 20),
+
+                const Icon(
+                  Icons.lock_outline_rounded,
+                  color: Colors.white,
+                  size: 100,
                 ),
-              ),
-            ),
-            TextField(
-              controller: password,
-              decoration: InputDecoration(
-                hintText: "Ievadi paroli",
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue, width: 2.0),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Color(0xFFFFFFFF),
+
+                const SizedBox(height: 30),
+
+                // Email TextField
+                TextField(
+                  controller: email,
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: "Enter your email",
+                    hintStyle: TextStyle(color: Colors.white60),
+                    prefixIcon: Icon(Icons.email, color: Colors.redAccent),
+                    filled: true,
+                    fillColor: Colors.grey[800],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-                prefixIcon: Icon(
-                  Icons.password_outlined,
-                  color: Color(0xFFFFFFFF),
+
+                const SizedBox(height: 20),
+
+                // Password TextField
+                TextField(
+                  controller: password,
+                  obscureText: !isPasswordVisible,
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: "Enter your password",
+                    hintStyle: TextStyle(color: Colors.white60),
+                    prefixIcon: Icon(Icons.lock, color: Colors.redAccent),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        color: Colors.white70,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          isPasswordVisible = !isPasswordVisible;
+                        });
+                      },
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[800],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
                 ),
-              ),
+
+                const SizedBox(height: 25),
+
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.redAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    minimumSize: Size(double.infinity, 50),
+                  ),
+                  onPressed: isLoading ? null : signIn,
+                  child: isLoading
+                      ? CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          "Sign In",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+
+                const SizedBox(height: 20),
+
+                TextButton(
+                  onPressed: () => Get.to(Forgot()),
+                  child: Text(
+                    "Forgot Password?",
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account?",
+                      style: TextStyle(color: Colors.white60, fontSize: 16),
+                    ),
+                    TextButton(
+                      onPressed: () => Get.to(Signup()),
+                      child: Text(
+                        "Sign Up",
+                        style: TextStyle(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Color(0xFF53354A),
-              ),
-              onPressed: (() => signIn()),
-              child: Text("Pieslegties"),
-            ),
-            SizedBox(height: 30),
-            ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Color(0xFF53354A),
-                ),
-                onPressed: (() => Get.to(Signup())),
-                child: Text("Registreties")),
-            SizedBox(height: 30),
-            ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Color(0xFF53354A),
-                ),
-                onPressed: (() => Get.to(Forgot())),
-                child: Text("Aizmirsu paroli"))
-          ],
+          ),
         ),
       ),
     );
