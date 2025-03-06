@@ -245,7 +245,7 @@ class _UserProfileState extends State<UserProfile> {
                                           255, 255, 255, 255))),
                             ],
                           ),
-                          SizedBox(width: 40), // Space between items
+                          SizedBox(width: 40),
                           Column(
                             children: [
                               Text("$totalThrows",
@@ -290,15 +290,12 @@ class _UserProfileState extends State<UserProfile> {
                                   final round = bestRounds[index];
                                   return Card(
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          15), // Rounded corners
+                                      borderRadius: BorderRadius.circular(15),
                                     ),
                                     color: Colors.grey[850],
-                                    elevation: 4, // Adds a shadow effect
+                                    elevation: 4,
                                     margin: EdgeInsets.symmetric(
-                                        vertical: 6,
-                                        horizontal:
-                                            12), // More balanced spacing
+                                        vertical: 6, horizontal: 12),
                                     child: ListTile(
                                       contentPadding: EdgeInsets.symmetric(
                                           vertical: 10, horizontal: 15),

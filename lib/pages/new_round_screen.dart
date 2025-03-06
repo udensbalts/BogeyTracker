@@ -142,8 +142,19 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF2B2E4A),
-      appBar: AppBar(title: Text("New Round")),
+      backgroundColor: Colors.grey[900],
+      appBar: AppBar(
+        title: Text(
+          "New Round",
+          style: TextStyle(
+            fontSize: 25,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.black,
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -201,7 +212,7 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
                       isSelected
                           ? Icons.check_box
                           : Icons.check_box_outline_blank,
-                      color: isSelected ? Colors.purple : null,
+                      color: isSelected ? Colors.red : null,
                     ),
                     onTap: () => togglePlayer(user),
                   );
@@ -214,7 +225,7 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
                 startRound();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF53354A),
+                backgroundColor: Colors.red,
                 padding: EdgeInsets.symmetric(vertical: 12),
               ),
               child: Center(

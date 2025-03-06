@@ -13,15 +13,14 @@ class CourseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12), // Rounded corners
+        borderRadius: BorderRadius.circular(12),
       ),
-      color: Colors.grey[850], // Dark background like in My Rounds
-      elevation: 4, // Adds a shadow effect
+      color: Colors.grey[850],
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: ListTile(
         contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
         leading: CircleAvatar(
-          backgroundColor: Colors.red, // Unique color for courses
+          backgroundColor: Colors.red,
           child: Icon(Icons.map, color: Colors.white),
         ),
         title: Text(

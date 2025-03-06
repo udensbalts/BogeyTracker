@@ -28,7 +28,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black, // Matches "My Rounds"
+        backgroundColor: Colors.black,
         title: Text(
           'Courses',
           style: TextStyle(
@@ -39,7 +39,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
         ),
         centerTitle: true,
       ),
-      backgroundColor: Colors.grey[900], // Dark background like in My Rounds
+      backgroundColor: Colors.grey[900],
       body: FutureBuilder<List<Course>>(
         future: coursesFuture,
         builder: (context, snapshot) {
