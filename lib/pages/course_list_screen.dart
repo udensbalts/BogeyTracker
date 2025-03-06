@@ -28,9 +28,9 @@ class _CourseListScreenState extends State<CourseListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF2B2E4A),
+        backgroundColor: Colors.black, // Matches "My Rounds"
         title: Text(
-          'Laukumi',
+          'Courses',
           style: TextStyle(
             fontSize: 25,
             fontWeight: FontWeight.bold,
@@ -39,14 +39,19 @@ class _CourseListScreenState extends State<CourseListScreen> {
         ),
         centerTitle: true,
       ),
-      backgroundColor: Color(0xFF2B2E4A),
+      backgroundColor: Colors.grey[900], // Dark background like in My Rounds
       body: FutureBuilder<List<Course>>(
         future: coursesFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No courses available'));
+            return Center(
+              child: Text(
+                'No courses available',
+                style: TextStyle(color: Colors.white70),
+              ),
+            );
           }
 
           List<Course> courses = snapshot.data!;
@@ -63,6 +68,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.redAccent,
         onPressed: () {
           Navigator.push(
             context,
@@ -79,7 +85,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
             ),
           );
         },
-        child: Icon(Icons.add),
+        child: Icon(Icons.add, color: Colors.white),
       ),
     );
   }

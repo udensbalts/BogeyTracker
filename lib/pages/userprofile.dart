@@ -289,22 +289,39 @@ class _UserProfileState extends State<UserProfile> {
                                 itemBuilder: (context, index) {
                                   final round = bestRounds[index];
                                   return Card(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          15), // Rounded corners
+                                    ),
                                     color: Colors.grey[850],
+                                    elevation: 4, // Adds a shadow effect
                                     margin: EdgeInsets.symmetric(
-                                        vertical: 5, horizontal: 10),
+                                        vertical: 6,
+                                        horizontal:
+                                            12), // More balanced spacing
                                     child: ListTile(
+                                      contentPadding: EdgeInsets.symmetric(
+                                          vertical: 10, horizontal: 15),
                                       title: Text(
                                         round['courseName'],
                                         style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold),
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
                                       ),
                                       subtitle: Text(
                                         "Score: ${round['totalScore']}",
-                                        style: TextStyle(color: Colors.white70),
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 16,
+                                        ),
                                       ),
-                                      leading: Icon(Icons.sports_golf,
-                                          color: Colors.red),
+                                      leading: CircleAvatar(
+                                        backgroundColor: Colors.red,
+                                        child: Icon(Icons.sports_golf,
+                                            color: Colors.white),
+                                      ),
                                     ),
                                   );
                                 },

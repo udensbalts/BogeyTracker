@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:test_app/pages/round_details_screen.dart';
+import 'package:intl/intl.dart';
 
 class UserRoundsScreen extends StatefulWidget {
   const UserRoundsScreen({Key? key}) : super(key: key);
@@ -71,42 +72,62 @@ class _UserRoundsScreenState extends State<UserRoundsScreen> {
                     var roundData =
                         userRounds[index].data() as Map<String, dynamic>;
                     String courseName = roundData['courseName'];
-                    String date = roundData['date'];
+                    var dateData = roundData['date'];
 
-                    return Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: Colors.red, width: 2), // Red border
-                        borderRadius: BorderRadius.circular(8),
-                        // Optional: Rounded corners
+                    DateTime dateTime;
+                    if (dateData is Timestamp) {
+                      dateTime = dateData
+                          .toDate(); // Convert Firestore Timestamp to DateTime
+                    } else if (dateData is String) {
+                      dateTime = DateTime.tryParse(dateData) ??
+                          DateTime.now(); // Parse String date
+                    } else {
+                      dateTime = DateTime.now();
+                    }
+
+                    String formattedDate = DateFormat('MMM d, yyyy').format(
+                        dateTime); // Convert Firestore Timestamp to DateTime
+
+                    return Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      color: Colors.grey[850],
+                      elevation: 4,
                       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      child: Card(
-                        color: Colors.black, // Background color inside the card
-                        elevation: 5, // Remove default shadow
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(8), // Match border radius
+                      child: ListTile(
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.red,
+                          child: Icon(Icons.sports_golf, color: Colors.white),
                         ),
-                        child: ListTile(
-                          title: Text(courseName,
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.red)),
-                          subtitle: Text(
-                            "Date: $date",
-                            style: TextStyle(color: Colors.red),
+                        title: Text(
+                          courseName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 18,
                           ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => RoundDetailsScreen(
-                                    roundId: userRounds[index].id),
-                              ),
-                            );
-                          },
                         ),
+                        subtitle: Text(
+                          "Date: $formattedDate",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 16,
+                          ),
+                        ),
+                        trailing: Icon(Icons.arrow_forward_ios,
+                            color: Colors.white54, size: 18),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RoundDetailsScreen(
+                                  roundId: userRounds[index].id),
+                            ),
+                          );
+                        },
                       ),
                     );
                   },

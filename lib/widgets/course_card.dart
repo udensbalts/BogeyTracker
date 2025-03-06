@@ -12,20 +12,35 @@ class CourseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12), // Rounded corners
+      ),
+      color: Colors.grey[850], // Dark background like in My Rounds
+      elevation: 4, // Adds a shadow effect
       margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: ListTile(
+        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+        leading: CircleAvatar(
+          backgroundColor: Colors.red, // Unique color for courses
+          child: Icon(Icons.map, color: Colors.white),
+        ),
         title: Text(
           course.name,
           style: TextStyle(
-              fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 18,
+          ),
         ),
         subtitle: Text(
           'Total Baskets: ${course.totalBaskets}',
-          style: TextStyle(fontSize: 15, color: Colors.white),
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 16,
+          ),
         ),
         trailing: PopupMenuButton<String>(
-          iconColor: Colors.white,
+          icon: Icon(Icons.more_vert, color: Colors.white54),
           onSelected: (value) {
             if (value == 'edit') {
               Navigator.push(
@@ -43,10 +58,6 @@ class CourseCard extends StatelessWidget {
             PopupMenuItem(value: 'delete', child: Text('Delete')),
           ],
         ),
-        tileColor: Color(0xFF53354A),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
       ),
     );
   }
@@ -56,12 +67,19 @@ class CourseCard extends StatelessWidget {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text("Delete Course"),
-          content: Text("Are you sure you want to delete '${course.name}'?"),
+          backgroundColor: Colors.grey[850],
+          title: Text(
+            "Delete Course",
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Text(
+            "Are you sure you want to delete '${course.name}'?",
+            style: TextStyle(color: Colors.white70),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: Text("Cancel"),
+              child: Text("Cancel", style: TextStyle(color: Colors.blue)),
             ),
             TextButton(
               onPressed: () {
