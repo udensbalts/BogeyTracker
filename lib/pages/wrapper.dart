@@ -54,9 +54,9 @@ class _MyWidgetState extends State<Wrapper> {
             gap: 5,
             tabs: const [
               GButton(icon: Icons.home, text: "Home"),
-              GButton(icon: Icons.golf_course, text: "Laukumi"),
-              GButton(icon: Icons.notes_rounded, text: "Statistika"),
-              GButton(icon: Icons.person_2_outlined, text: "Profils"),
+              GButton(icon: Icons.golf_course, text: "Courses"),
+              GButton(icon: Icons.notes_rounded, text: "Rounds"),
+              GButton(icon: Icons.person_2_outlined, text: "Profile"),
             ],
             selectedIndex: _selectedIndex,
             onTabChange: (index) {

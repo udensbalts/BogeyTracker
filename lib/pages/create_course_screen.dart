@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:test_app/models/course_model.dart'; // Import the course models
-import 'package:test_app/services/firebase_service.dart'; // Firebase service to save course data
+import 'package:test_app/models/course_model.dart';
+import 'package:test_app/services/firebase_service.dart';
 
 class CreateCourseScreen extends StatefulWidget {
   @override
@@ -13,36 +13,43 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
   List<TextEditingController> parControllers = [];
   List<TextEditingController> distanceControllers = [];
 
-  // This will store the basket details once entered
   List<Basket> baskets = [];
 
-  // Generate input fields for baskets
+  // Generates input fields dynamically when basket count changes
   void generateBasketFields() {
-    int basketCount = int.parse(basketCountController.text);
+    int basketCount = int.tryParse(basketCountController.text) ?? 0;
+    if (basketCount <= 0) return;
 
-    // Clear existing controllers if basket count changes
     parControllers.clear();
     distanceControllers.clear();
     baskets.clear();
 
-    // Create new controllers based on basket count
     for (int i = 0; i < basketCount; i++) {
       parControllers.add(TextEditingController());
       distanceControllers.add(TextEditingController());
     }
 
-    setState(() {}); // Rebuild the UI with new input fields
+    setState(() {});
   }
 
   void saveCourse() async {
-    String courseName = courseNameController.text;
-    int totalBaskets = int.parse(basketCountController.text);
+    String courseName = courseNameController.text.trim();
+    int totalBaskets = int.tryParse(basketCountController.text) ?? 0;
 
-    // Convert the par and distance inputs into Basket objects
+    if (courseName.isEmpty || totalBaskets <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please enter valid course details."),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     baskets.clear();
     for (int i = 0; i < totalBaskets; i++) {
-      int par = int.parse(parControllers[i].text);
-      double distance = double.parse(distanceControllers[i].text);
+      int par = int.tryParse(parControllers[i].text) ?? 0;
+      double distance = double.tryParse(distanceControllers[i].text) ?? 0.0;
 
       baskets.add(Basket(basketNumber: i + 1, par: par, distance: distance));
     }
@@ -54,78 +61,145 @@ class _CreateCourseScreenState extends State<CreateCourseScreen> {
       id: '',
     );
 
-    // Save to Firestore (Use FirebaseService)
-    FirebaseService().saveCourse(course);
+    await FirebaseService().saveCourse(course);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Course saved successfully!"),
+        backgroundColor: Colors.green,
+      ),
+    );
+
     courseNameController.clear();
     basketCountController.clear();
+    setState(() {
+      parControllers.clear();
+      distanceControllers.clear();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Create Disc Golf Course')),
-      body: Padding(
+      appBar: AppBar(
+        title: Text(
+          'Create Disc Golf Course',
+          style: TextStyle(
+            fontSize: 25,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.black,
+      ),
+      backgroundColor: Colors.grey[900],
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Course Name Input
-            TextField(
-              controller: courseNameController,
-              decoration: InputDecoration(
-                labelText: 'Course Name',
-              ),
-            ),
+            _buildTextField(courseNameController, "Course Name", Icons.flag),
+            SizedBox(height: 16),
+            _buildTextField(
+                basketCountController, "Total Baskets", Icons.looks_one,
+                keyboardType: TextInputType.number,
+                onChanged: (_) => generateBasketFields()),
+
             SizedBox(height: 16),
 
-            // Total Baskets Input
-            TextField(
-              controller: basketCountController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Total Baskets',
+            if (parControllers.isNotEmpty)
+              Text(
+                "Basket Details",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
               ),
-              onChanged: (value) {
-                if (value.isNotEmpty) {
-                  generateBasketFields(); // Generate fields when basket count is entered
-                }
+
+            SizedBox(height: 10),
+
+            // Baskets List
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: parControllers.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  color: Colors.grey[800],
+                  margin: EdgeInsets.symmetric(vertical: 6),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Basket ${index + 1}',
+                          style: TextStyle(
+                              color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 8),
+                        _buildTextField(
+                            parControllers[index], "Par", Icons.golf_course,
+                            keyboardType: TextInputType.number),
+                        SizedBox(height: 8),
+                        _buildTextField(distanceControllers[index],
+                            "Distance (meters)", Icons.straighten,
+                            keyboardType: TextInputType.number),
+                      ],
+                    ),
+                  ),
+                );
               },
             ),
-            SizedBox(height: 16),
 
-            // Dynamically generated basket input fields
-            Expanded(
-              child: ListView.builder(
-                itemCount: parControllers.length,
-                itemBuilder: (context, index) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Basket ${index + 1}'),
-                      TextField(
-                        controller: parControllers[index],
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(labelText: 'Par'),
-                      ),
-                      TextField(
-                        controller: distanceControllers[index],
-                        keyboardType: TextInputType.number,
-                        decoration:
-                            InputDecoration(labelText: 'Distance (in meters)'),
-                      ),
-                      SizedBox(height: 16),
-                    ],
-                  );
-                },
+            SizedBox(height: 20),
+
+            // Save Button
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding: EdgeInsets.symmetric(vertical: 14),
+                minimumSize: Size(double.infinity, 50),
+              ),
+              onPressed: saveCourse,
+              child: Text(
+                'Save Course',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
             ),
-
-            // Save Course Button
-            ElevatedButton(
-              onPressed: saveCourse,
-              child: Text('Save Course'),
-            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    TextInputType keyboardType = TextInputType.text,
+    void Function(String)? onChanged,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      style: TextStyle(color: Colors.white),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.white70),
+        prefixIcon: Icon(icon, color: Colors.redAccent),
+        filled: true,
+        fillColor: Colors.grey[800],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
         ),
       ),
     );
