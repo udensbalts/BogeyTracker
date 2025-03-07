@@ -282,7 +282,7 @@ class _UserProfileState extends State<UserProfile> {
                                   color: Colors.white70, fontSize: 16),
                             )
                           : SizedBox(
-                              height: 250,
+                              height: 300,
                               child: ListView.builder(
                                 shrinkWrap: true,
                                 itemCount: bestRounds.length,

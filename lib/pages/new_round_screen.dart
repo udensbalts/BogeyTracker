@@ -66,23 +66,15 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
   }
 
   Future<void> startRound() async {
-    if (selectedCourseId == null) {
-      return;
-    }
-
-    if (selectedPlayers.isEmpty) {
+    if (selectedCourseId == null || selectedPlayers.isEmpty) {
       return;
     }
 
     var selectedCourse = courses.firstWhere((c) => c['id'] == selectedCourseId,
         orElse: () => {});
 
-    if (selectedCourse.isEmpty) {
-      return;
-    }
-
-    // Ensure baskets exist and are properly formatted
-    if (selectedCourse['baskets'] == null ||
+    if (selectedCourse.isEmpty ||
+        selectedCourse['baskets'] == null ||
         selectedCourse['baskets'] is! List) {
       return;
     }
@@ -123,7 +115,7 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
           players: selectedPlayers
               .map((p) => {
                     'playerId': p.playerId,
-                    'playerName': p.playerName ?? "",
+                    'playerName': p.playerName,
                   })
               .toList(),
           baskets: selectedCourse['baskets']
@@ -163,78 +155,103 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
             Text(
               "Select Course",
               style: TextStyle(
-                fontSize: 25,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-            DropdownButton<String>(
-              value: selectedCourseId,
-              items: courses.map<DropdownMenuItem<String>>((course) {
-                return DropdownMenuItem<String>(
-                  value: course['id'],
-                  child: Text(course['name']),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                if (newValue == null) return;
-                setState(() {
-                  selectedCourseId = newValue;
-                  selectedCourseName =
-                      courses.firstWhere((c) => c['id'] == newValue)['name'];
-                });
-              },
+            SizedBox(height: 10),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.grey[800],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: DropdownButton<String>(
+                dropdownColor: Colors.grey[800],
+                value: selectedCourseId,
+                isExpanded: true,
+                hint: Text("Choose a course",
+                    style: TextStyle(color: Colors.white)),
+                items: courses.map<DropdownMenuItem<String>>((course) {
+                  return DropdownMenuItem<String>(
+                    value: course['id'],
+                    child: Text(course['name'],
+                        style: TextStyle(color: Colors.white)),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue == null) return;
+                  setState(() {
+                    selectedCourseId = newValue;
+                    selectedCourseName =
+                        courses.firstWhere((c) => c['id'] == newValue)['name'];
+                  });
+                },
+                icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+              ),
             ),
             SizedBox(height: 20),
+
             Text(
               "Select Players",
               style: TextStyle(
-                fontSize: 25,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
-              selectionColor: Colors.white,
             ),
+            SizedBox(height: 10),
             Expanded(
               child: ListView(
                 children: users.map((user) {
                   bool isSelected =
                       selectedPlayers.any((p) => p.playerId == user['id']);
-                  return ListTile(
-                    title: Text(
-                      user['name'],
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
+                  return GestureDetector(
+                    onTap: () => togglePlayer(user),
+                    child: Container(
+                      margin: EdgeInsets.symmetric(vertical: 6),
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.red : Colors.grey[800],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            user['name'],
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
+                          Icon(
+                            isSelected
+                                ? Icons.check_circle
+                                : Icons.radio_button_unchecked,
+                            color: Colors.white,
+                          ),
+                        ],
                       ),
                     ),
-                    trailing: Icon(
-                      isSelected
-                          ? Icons.check_box
-                          : Icons.check_box_outline_blank,
-                      color: isSelected ? Colors.red : null,
-                    ),
-                    onTap: () => togglePlayer(user),
                   );
                 }).toList(),
               ),
             ),
             SizedBox(height: 20),
+
+            // Start Round Button
             ElevatedButton(
-              onPressed: () {
-                startRound();
-              },
+              onPressed: startRound,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                padding: EdgeInsets.symmetric(vertical: 12),
-              ),
-              child: Center(
-                child: Text(
-                  "Start Round",
-                  style: TextStyle(
-                      color: const Color.fromARGB(255, 255, 255, 255),
-                      fontSize: 18),
+                backgroundColor: Colors.redAccent,
+                padding: EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                minimumSize: Size(double.infinity, 50),
+              ),
+              child: Text(
+                "Start Round",
+                style: TextStyle(fontSize: 18, color: Colors.white),
               ),
             ),
           ],
