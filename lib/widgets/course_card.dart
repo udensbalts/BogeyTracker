@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:test_app/models/course_model.dart';
+import 'package:test_app/pages/basket_list.dart';
 import 'package:test_app/pages/course_detail_screen.dart';
 import 'package:test_app/services/firebase_service.dart';
 
@@ -38,6 +39,17 @@ class CourseCard extends StatelessWidget {
             fontSize: 16,
           ),
         ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BasketList(
+                courseId: course.id,
+                courseName: course.name,
+              ),
+            ),
+          );
+        },
         trailing: PopupMenuButton<String>(
           icon: Icon(Icons.more_vert, color: Colors.white54),
           onSelected: (value) {
