@@ -33,98 +33,115 @@ class _ScoreInputState extends State<ScoreInput> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      bottom: true, // Ensures the UI stays above the system nav bar
+      bottom: true,
       child: FractionallySizedBox(
-        heightFactor: 1.10,
+        heightFactor: 1.3,
         child: Container(
           padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.grey[900],
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("Enter Score",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(
+                "Enter Score",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
               SizedBox(height: 12),
-              Text(input.isEmpty ? "-" : input,
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-              SizedBox(height: 12),
-              Expanded(
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: 1.8,
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                decoration: BoxDecoration(
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  input.isEmpty ? "-" : input,
+                  style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                  itemCount: 13,
-                  itemBuilder: (context, index) {
-                    if (index == 9) return SizedBox();
-
-                    if (index == 10) {
-                      return ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shape: CircleBorder(),
-                          padding: EdgeInsets.all(10),
-                          backgroundColor: Colors.blueAccent,
-                        ),
-                        onPressed: () => enterNumber("0"),
-                        child: Text("0",
-                            style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white)),
-                      );
-                    }
-
-                    if (index == 11) {
-                      return ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shape: CircleBorder(),
-                          padding: EdgeInsets.all(10),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                        onPressed: deleteNumber,
-                        child: Icon(Icons.backspace, color: Colors.white),
-                      );
-                    }
-
-                    if (index == 12) {
-                      return ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shape: CircleBorder(),
-                          padding: EdgeInsets.all(10),
-                          backgroundColor: Colors.green,
-                        ),
-                        onPressed: submitScore,
-                        child: Icon(Icons.check, color: Colors.white),
-                      );
-                    }
-
-                    return ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        shape: CircleBorder(),
-                        padding: EdgeInsets.all(10),
-                        backgroundColor: Colors.blueAccent,
-                      ),
-                      onPressed: () => enterNumber((index + 1).toString()),
-                      child: Text((index + 1).toString(),
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white)),
-                    );
-                  },
+                ),
+              ),
+              SizedBox(height: 20),
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.2,
+                  children: _buildKeypadButtons(),
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  List<Widget> _buildKeypadButtons() {
+    List<String> buttons = [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "+",
+      "0",
+      "-",
+    ];
+
+    return buttons.map((label) {
+      if (label.isEmpty) return SizedBox();
+      if (label == "-") {
+        return _buildIconButton(
+            Icons.backspace, Colors.redAccent, deleteNumber);
+      } else if (label == "+") {
+        return _buildIconButton(Icons.check, Colors.green, submitScore);
+      } else {
+        return _buildButton(label, Colors.grey, () => enterNumber(label));
+      }
+    }).toList();
+  }
+
+  Widget _buildButton(String text, Color color, VoidCallback onPressed) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: EdgeInsets.all(16),
+        backgroundColor: color,
+        elevation: 4,
+      ),
+      onPressed: onPressed,
+      child: Text(
+        text,
+        style: TextStyle(
+            fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildIconButton(IconData icon, Color color, VoidCallback onPressed) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: EdgeInsets.all(16),
+        backgroundColor: color,
+        elevation: 4,
+      ),
+      onPressed: onPressed,
+      child: Icon(icon, color: Colors.white, size: 28),
     );
   }
 }
