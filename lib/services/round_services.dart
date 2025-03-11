@@ -25,21 +25,28 @@ class RoundService {
         );
       }).toList();
 
-      // Convert player IDs into PlayerScore objects
-      List<PlayerScore> playerScores = playerIds.map((playerId) {
-        return PlayerScore(
+      List<PlayerScore> playerScores = [];
+      for (String playerId in playerIds) {
+        DocumentSnapshot userDoc =
+            await _firestore.collection('users').doc(playerId).get();
+        String playerName = userDoc.exists
+            ? (userDoc.data() as Map<String, dynamic>)['name'] ??
+                "Unknown Player"
+            : "Unknown Player";
+
+        playerScores.add(PlayerScore(
           playerId: playerId,
-          playerName: "", // Fetch player name separately if needed
+          playerName: playerName,
           basketScores: basketScores
               .map((basket) => BasketScore(
                     basketNumber: basket.basketNumber,
                     par: basket.par,
                     distance: basket.distance,
-                    score: 0, // Ensure each player starts with 0 score
+                    score: 0, // Each player starts with 0 score
                   ))
               .toList(),
-        );
-      }).toList();
+        ));
+      }
 
       // Create the Round object
       Round round = Round(

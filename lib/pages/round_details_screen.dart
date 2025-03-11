@@ -16,16 +16,27 @@ class _RoundDetailsScreenState extends State<RoundDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Round Details")),
+      appBar: AppBar(
+        title: Text("Round Details",
+            style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Colors.white)),
+        centerTitle: true,
+        backgroundColor: Colors.black,
+      ),
+      backgroundColor: Colors.grey[900],
       body: FutureBuilder<DocumentSnapshot>(
         future: _firestore.collection('rounds').doc(widget.roundId).get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator(color: Colors.red));
           }
 
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            return Center(child: Text("Round data not found."));
+            return Center(
+                child: Text("Round data not found.",
+                    style: TextStyle(color: Colors.white, fontSize: 18)));
           }
 
           var roundData = snapshot.data!.data() as Map<String, dynamic>;
@@ -40,7 +51,6 @@ class _RoundDetailsScreenState extends State<RoundDetailsScreen> {
               0,
               (sum, basket) => sum + ((basket['score'] ?? 0) as int),
             );
-
             return {
               'playerName': player['playerName'] ?? "Unknown Player",
               'basketScores': basketScores,
@@ -50,46 +60,56 @@ class _RoundDetailsScreenState extends State<RoundDetailsScreen> {
 
           // Sort players by total score (lowest score first)
           playerList.sort((a, b) => a['totalScore'].compareTo(b['totalScore']));
+          int totalBaskets = playerList.isNotEmpty
+              ? playerList.first['basketScores'].length
+              : 0;
 
           return Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(courseName,
-                    style:
-                        TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                    style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
                 SizedBox(height: 5),
                 Text("Date: $date",
                     style: TextStyle(fontSize: 16, color: Colors.grey)),
                 SizedBox(height: 20),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: playerList.length,
-                    itemBuilder: (context, index) {
-                      var player = playerList[index];
-                      String playerName = player['playerName'];
-                      int totalScore = player['totalScore'];
-                      List<dynamic> basketScores = player['basketScores'];
-
-                      return Card(
-                        margin: EdgeInsets.symmetric(vertical: 8),
-                        child: ExpansionTile(
-                          title: Text(
-                            "$playerName - Total Score: $totalScore",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          children: basketScores.map<Widget>((basket) {
-                            return ListTile(
-                              title: Text("Basket ${basket['basketNumber']}"),
-                              subtitle: Text(
-                                "Par: ${basket['par']} | Distance: ${basket['distance']}m | Score: ${basket['score']}",
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      );
-                    },
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columnSpacing: 15,
+                      headingRowColor:
+                          MaterialStateProperty.all(Colors.redAccent),
+                      columns: [
+                        DataColumn(
+                            label: Text("Player", style: _headerStyle())),
+                        ...List.generate(
+                            totalBaskets,
+                            (index) => DataColumn(
+                                label: Text("${index + 1}",
+                                    style: _headerStyle()))),
+                        DataColumn(label: Text("Total", style: _headerStyle())),
+                      ],
+                      rows: playerList.map((player) {
+                        return DataRow(cells: [
+                          DataCell(Text(player['playerName'],
+                              style: _cellStyle(bold: true))),
+                          ...List.generate(totalBaskets, (index) {
+                            var score =
+                                player['basketScores'][index]['score'] ?? "-";
+                            return DataCell(
+                                Text(score.toString(), style: _cellStyle()));
+                          }),
+                          DataCell(Text(player['totalScore'].toString(),
+                              style: _cellStyle(bold: true))),
+                        ]);
+                      }).toList(),
+                    ),
                   ),
                 ),
               ],
@@ -98,5 +118,17 @@ class _RoundDetailsScreenState extends State<RoundDetailsScreen> {
         },
       ),
     );
+  }
+
+  TextStyle _headerStyle() {
+    return TextStyle(
+        fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white);
+  }
+
+  TextStyle _cellStyle({bool bold = false}) {
+    return TextStyle(
+        fontSize: bold ? 15 : 14,
+        fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+        color: Colors.white);
   }
 }
