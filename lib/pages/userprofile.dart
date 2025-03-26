@@ -216,18 +216,27 @@ class _UserProfileState extends State<UserProfile> {
                       Text(
                         "Name: $name",
                         style: TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                      SizedBox(height: 10),
+                      Divider(
+                        color: Colors.redAccent,
+                        thickness: 2,
+                        height: 15,
+                        indent: 50,
+                        endIndent: 50,
+                      ),
                       Text(
                         "@$username",
-                        style: TextStyle(fontSize: 18, color: Colors.red),
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.red,
+                        ),
                       ),
-                      SizedBox(height: 20), // Space before row
+                      SizedBox(height: 20),
 
-                      // New Row with two children
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -324,6 +333,9 @@ class _UserProfileState extends State<UserProfile> {
                                 },
                               ),
                             ),
+                      SizedBox(
+                        height: 15,
+                      )
                     ],
                   ),
                 ),
