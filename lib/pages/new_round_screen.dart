@@ -15,40 +15,70 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
   String? selectedCourseId;
   String? selectedCourseName;
   List<PlayerScore> selectedPlayers = [];
+  TextEditingController searchController = TextEditingController();
+  List<Map<String, dynamic>> filteredUsers = [];
 
   @override
   void initState() {
     super.initState();
     fetchCourses();
     fetchUsers();
+    searchController.addListener(_filterUsers);
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterUsers() {
+    final query = searchController.text.toLowerCase();
+    setState(() {
+      filteredUsers = users.where((user) {
+        final name = user['name']?.toString().toLowerCase() ?? '';
+        return name.contains(query);
+      }).toList();
+    });
   }
 
   Future<void> fetchCourses() async {
-    var snapshot = await FirebaseFirestore.instance.collection('courses').get();
-    setState(() {
-      courses = snapshot.docs.map((doc) {
-        return {
-          'id': doc.id,
-          'name': doc['name'],
-          'baskets': (doc['baskets'] as List<dynamic>?)
-                  ?.map((b) => Map<String, dynamic>.from(b as Map))
-                  .toList() ??
-              [],
-        };
-      }).toList();
-    });
+    try {
+      var snapshot =
+          await FirebaseFirestore.instance.collection('courses').get();
+      setState(() {
+        courses = snapshot.docs.map((doc) {
+          return {
+            'id': doc.id,
+            'name': doc['name'],
+            'baskets': (doc['baskets'] as List<dynamic>?)
+                    ?.map((b) => Map<String, dynamic>.from(b as Map))
+                    .toList() ??
+                [],
+          };
+        }).toList();
+      });
+    } catch (e) {
+      print("Error fetching courses: $e");
+    }
   }
 
   Future<void> fetchUsers() async {
-    var snapshot = await FirebaseFirestore.instance.collection('users').get();
-    setState(() {
-      users = snapshot.docs.map((doc) {
-        return {
-          'id': doc.id,
-          'name': doc['name'],
-        };
-      }).toList();
-    });
+    try {
+      var snapshot = await FirebaseFirestore.instance.collection('users').get();
+      setState(() {
+        users = snapshot.docs.map((doc) {
+          return {
+            'id': doc.id,
+            'name': doc['name'],
+          };
+        }).toList();
+        filteredUsers = List.from(users);
+        searchController.clear();
+      });
+    } catch (e) {
+      print("Error fetching users: $e");
+    }
   }
 
   void togglePlayer(Map<String, dynamic> user) {
@@ -66,69 +96,83 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
   }
 
   Future<void> startRound() async {
-    if (selectedCourseId == null || selectedPlayers.isEmpty) {
-      return;
-    }
-
-    var selectedCourse = courses.firstWhere((c) => c['id'] == selectedCourseId,
-        orElse: () => {});
-
-    if (selectedCourse.isEmpty ||
-        selectedCourse['baskets'] == null ||
-        selectedCourse['baskets'] is! List) {
-      return;
-    }
-
-    List<BasketScore> basketScores =
-        (selectedCourse['baskets'] as List<dynamic>).map((basket) {
-      var basketMap = basket as Map<String, dynamic>? ?? {};
-      return BasketScore(
-        basketNumber: (basketMap['basketNumber'] as num?)?.toInt() ?? 0,
-        par: (basketMap['par'] as num?)?.toInt() ?? 3,
-        distance: (basketMap['distance'] as num?)?.toInt() ?? 0,
-      );
-    }).toList();
-
-    for (var player in selectedPlayers) {
-      player.basketScores = List.from(basketScores); // Ensure separate copies
-    }
-
-    String? roundId = await RoundService().createRound(
-      selectedCourseId!,
-      selectedPlayers.map((p) => p.playerId).toList(),
-    );
-
-    if (roundId == null) {
+    if (selectedCourseId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to create round")),
+        SnackBar(content: Text("Please select a course")),
       );
       return;
     }
 
-    // Pass data to the next screen
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ScoringScreen(
-          roundId: roundId,
-          courseId: selectedCourseId!,
-          players: selectedPlayers
-              .map((p) => {
-                    'playerId': p.playerId,
-                    'playerName': p.playerName,
-                  })
-              .toList(),
-          baskets: selectedCourse['baskets']
-                  ?.map<Map<String, dynamic>>((b) => {
-                        'basketNumber': b['basketNumber'],
-                        'par': b['par'],
-                        'distance': b['distance'],
-                      })
-                  .toList() ??
-              [], // Ensure baskets are passed correctly
+    if (selectedPlayers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please select at least one player")),
+      );
+      return;
+    }
+
+    try {
+      var selectedCourse =
+          courses.firstWhere((c) => c['id'] == selectedCourseId);
+
+      if (selectedCourse['baskets'] == null ||
+          selectedCourse['baskets'] is! List) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Invalid course data")),
+        );
+        return;
+      }
+
+      List<BasketScore> basketScores =
+          (selectedCourse['baskets'] as List<dynamic>).map((basket) {
+        var basketMap = basket as Map<String, dynamic>? ?? {};
+        return BasketScore(
+          basketNumber: (basketMap['basketNumber'] as num?)?.toInt() ?? 0,
+          par: (basketMap['par'] as num?)?.toInt() ?? 3,
+          distance: (basketMap['distance'] as num?)?.toInt() ?? 0,
+        );
+      }).toList();
+
+      for (var player in selectedPlayers) {
+        player.basketScores = List.from(basketScores);
+      }
+
+      String? roundId = await RoundService().createRound(
+        selectedCourseId!,
+        selectedPlayers.map((p) => p.playerId).toList(),
+      );
+
+      if (roundId == null) {
+        throw Exception("Failed to create round");
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScoringScreen(
+            roundId: roundId,
+            courseId: selectedCourseId!,
+            players: selectedPlayers
+                .map((p) => {
+                      'playerId': p.playerId,
+                      'playerName': p.playerName,
+                    })
+                .toList(),
+            baskets: selectedCourse['baskets']
+                    ?.map<Map<String, dynamic>>((b) => {
+                          'basketNumber': b['basketNumber'],
+                          'par': b['par'],
+                          'distance': b['distance'],
+                        })
+                    .toList() ??
+                [],
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error starting round: ${e.toString()}")),
+      );
+    }
   }
 
   @override
@@ -152,6 +196,7 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Course Selection
             Text(
               "Select Course",
               style: TextStyle(
@@ -193,6 +238,7 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
             ),
             SizedBox(height: 20),
 
+            // Player Selection
             Text(
               "Select Players",
               style: TextStyle(
@@ -202,39 +248,97 @@ class _NewRoundScreenState extends State<NewRoundScreen> {
               ),
             ),
             SizedBox(height: 10),
-            Expanded(
-              child: ListView(
-                children: users.map((user) {
-                  bool isSelected =
-                      selectedPlayers.any((p) => p.playerId == user['id']);
-                  return GestureDetector(
-                    onTap: () => togglePlayer(user),
-                    child: Container(
-                      margin: EdgeInsets.symmetric(vertical: 6),
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.red : Colors.grey[800],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            user['name'],
-                            style: TextStyle(fontSize: 18, color: Colors.white),
-                          ),
-                          Icon(
-                            isSelected
-                                ? Icons.check_circle
-                                : Icons.radio_button_unchecked,
-                            color: Colors.white,
-                          ),
-                        ],
-                      ),
+
+            // Search Bar
+            TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.grey[800],
+                hintText: 'Search players...',
+                hintStyle: TextStyle(color: Colors.grey[400]),
+                prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+              style: TextStyle(color: Colors.white),
+            ),
+            SizedBox(height: 10),
+
+            // Selected Players Chips
+            if (selectedPlayers.isNotEmpty)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: selectedPlayers.map((player) {
+                  return Chip(
+                    backgroundColor: Colors.red,
+                    label: Text(
+                      player.playerName,
+                      style: TextStyle(color: Colors.white),
                     ),
+                    deleteIcon:
+                        Icon(Icons.close, size: 18, color: Colors.white),
+                    onDeleted: () {
+                      togglePlayer({
+                        'id': player.playerId,
+                        'name': player.playerName,
+                      });
+                    },
                   );
                 }).toList(),
               ),
+
+            // Player List
+            Expanded(
+              child: filteredUsers.isEmpty
+                  ? Center(
+                      child: Text(
+                        searchController.text.isEmpty
+                            ? 'No players available'
+                            : 'No matching players found',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: filteredUsers.length,
+                      itemBuilder: (context, index) {
+                        final user = filteredUsers[index];
+                        bool isSelected = selectedPlayers
+                            .any((p) => p.playerId == user['id']);
+                        return GestureDetector(
+                          onTap: () => togglePlayer(user),
+                          child: Container(
+                            margin: EdgeInsets.symmetric(vertical: 6),
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.red : Colors.grey[800],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  user['name'],
+                                  style: TextStyle(
+                                      fontSize: 18, color: Colors.white),
+                                ),
+                                Icon(
+                                  isSelected
+                                      ? Icons.check_circle
+                                      : Icons.radio_button_unchecked,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
             SizedBox(height: 20),
 
